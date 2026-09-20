@@ -1,0 +1,141 @@
+@baseUrl = http://localhost:5050
+@ownerAEmail = milestone3-owner-a@example.com
+@ownerBEmail = milestone3-owner-b@example.com
+@password = password123
+
+### Register owner A
+# @name registerOwnerA
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Task Owner A",
+  "email": "{{ownerAEmail}}",
+  "password": "{{password}}"
+}
+
+### Register owner B
+# @name registerOwnerB
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Task Owner B",
+  "email": "{{ownerBEmail}}",
+  "password": "{{password}}"
+}
+
+### Log in owner A (use this after the account has already been registered)
+# @name loginOwnerA
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{ownerAEmail}}",
+  "password": "{{password}}"
+}
+
+### Log in owner B (use this after the account has already been registered)
+# @name loginOwnerB
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{ownerBEmail}}",
+  "password": "{{password}}"
+}
+
+### Create owner A's task
+# @name createOwnerATask
+POST {{baseUrl}}/tasks
+Authorization: Bearer {{loginOwnerA.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "title": "Learn NestJS",
+  "description": "Study guards and interceptors",
+  "status": "pending",
+  "priority": "high"
+}
+
+### Create owner B's task
+# @name createOwnerBTask
+POST {{baseUrl}}/tasks
+Authorization: Bearer {{loginOwnerB.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "title": "Owner B private task",
+  "priority": "medium"
+}
+
+### List owner A's tasks - must not include owner B's task
+GET {{baseUrl}}/tasks
+Authorization: Bearer {{loginOwnerA.response.body.$.accessToken}}
+
+### List owner B's tasks - must not include owner A's task
+GET {{baseUrl}}/tasks
+Authorization: Bearer {{loginOwnerB.response.body.$.accessToken}}
+
+### Get owner A's task
+GET {{baseUrl}}/tasks/{{createOwnerATask.response.body.$.id}}
+Authorization: Bearer {{loginOwnerA.response.body.$.accessToken}}
+
+### Update owner A's task
+PATCH {{baseUrl}}/tasks/{{createOwnerATask.response.body.$.id}}
+Authorization: Bearer {{loginOwnerA.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "title": "Learn advanced NestJS",
+  "status": "in_progress",
+  "priority": "medium"
+}
+
+### Owner B reads owner A's task - expect 404 Not Found
+GET {{baseUrl}}/tasks/{{createOwnerATask.response.body.$.id}}
+Authorization: Bearer {{loginOwnerB.response.body.$.accessToken}}
+
+### Owner B updates owner A's task - expect 404 Not Found
+PATCH {{baseUrl}}/tasks/{{createOwnerATask.response.body.$.id}}
+Authorization: Bearer {{loginOwnerB.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "title": "Unauthorized update"
+}
+
+### Owner B deletes owner A's task - expect 404 Not Found
+DELETE {{baseUrl}}/tasks/{{createOwnerATask.response.body.$.id}}
+Authorization: Bearer {{loginOwnerB.response.body.$.accessToken}}
+
+### Create invalid task - expect 400 Bad Request
+POST {{baseUrl}}/tasks
+Authorization: Bearer {{loginOwnerA.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "title": " ",
+  "status": "invalid",
+  "priority": "urgent",
+  "user": "000000000000000000000000"
+}
+
+### Get malformed task ID - expect 400 Bad Request
+GET {{baseUrl}}/tasks/not-an-object-id
+Authorization: Bearer {{loginOwnerA.response.body.$.accessToken}}
+
+### List tasks without a token - expect 401 Unauthorized
+GET {{baseUrl}}/tasks
+
+### Delete owner A's task
+DELETE {{baseUrl}}/tasks/{{createOwnerATask.response.body.$.id}}
+Authorization: Bearer {{loginOwnerA.response.body.$.accessToken}}
+
+### Get owner A's deleted task - expect 404 Not Found
+GET {{baseUrl}}/tasks/{{createOwnerATask.response.body.$.id}}
+Authorization: Bearer {{loginOwnerA.response.body.$.accessToken}}
+
+### Delete owner B's task
+DELETE {{baseUrl}}/tasks/{{createOwnerBTask.response.body.$.id}}
+Authorization: Bearer {{loginOwnerB.response.body.$.accessToken}}
