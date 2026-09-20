@@ -21,9 +21,11 @@ import {
 } from '@nestjs/swagger';
 
 import { Roles } from '../common/decorators/roles.decorator';
+import { ApiErrorResponseDto } from '../common/dto/api-error-response.dto';
 import { UserRole } from '../common/enums/user-role.enum';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { apiErrorExample } from '../common/swagger/api-error-example';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { AdminService } from './admin.service';
 
@@ -37,9 +39,13 @@ const userIdParameter = {
 @ApiBearerAuth('access-token')
 @ApiUnauthorizedResponse({
   description: 'The access token is missing, invalid, or expired.',
+  type: ApiErrorResponseDto,
+  example: apiErrorExample(401, 'Unauthorized', 'Unauthorized', '/users'),
 })
 @ApiForbiddenResponse({
   description: 'The authenticated user does not have the admin role.',
+  type: ApiErrorResponseDto,
+  example: apiErrorExample(403, 'Forbidden', 'Forbidden resource', '/users'),
 })
 @Roles(UserRole.Admin)
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -65,8 +71,26 @@ export class AdminUsersController {
     description: 'The requested user, with the password field excluded.',
     type: UserResponseDto,
   })
-  @ApiBadRequestResponse({ description: 'The user ID is malformed.' })
-  @ApiNotFoundResponse({ description: 'The user does not exist.' })
+  @ApiBadRequestResponse({
+    description: 'The user ID is malformed.',
+    type: ApiErrorResponseDto,
+    example: apiErrorExample(
+      400,
+      'Bad Request',
+      'Invalid user ID',
+      '/users/not-an-object-id',
+    ),
+  })
+  @ApiNotFoundResponse({
+    description: 'The user does not exist.',
+    type: ApiErrorResponseDto,
+    example: apiErrorExample(
+      404,
+      'Not Found',
+      'User not found',
+      '/users/66bf30f125f21465bfc93d57',
+    ),
+  })
   findOne(@Param('id') userId: string): Promise<UserResponseDto> {
     return this.adminService.findUser(userId);
   }
@@ -80,8 +104,26 @@ export class AdminUsersController {
   @ApiNoContentResponse({
     description: 'The user and all tasks owned by that user were deleted.',
   })
-  @ApiBadRequestResponse({ description: 'The user ID is malformed.' })
-  @ApiNotFoundResponse({ description: 'The user does not exist.' })
+  @ApiBadRequestResponse({
+    description: 'The user ID is malformed.',
+    type: ApiErrorResponseDto,
+    example: apiErrorExample(
+      400,
+      'Bad Request',
+      'Invalid user ID',
+      '/users/not-an-object-id',
+    ),
+  })
+  @ApiNotFoundResponse({
+    description: 'The user does not exist.',
+    type: ApiErrorResponseDto,
+    example: apiErrorExample(
+      404,
+      'Not Found',
+      'User not found',
+      '/users/66bf30f125f21465bfc93d57',
+    ),
+  })
   delete(@Param('id') userId: string): Promise<void> {
     return this.adminService.deleteUser(userId);
   }

@@ -24,7 +24,9 @@ import {
 } from '@nestjs/swagger';
 
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { ApiErrorResponseDto } from '../common/dto/api-error-response.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { apiErrorExample } from '../common/swagger/api-error-example';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { TaskResponseDto } from './dto/task-response.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
@@ -41,6 +43,8 @@ const taskIdParameter = {
 @ApiBearerAuth('access-token')
 @ApiUnauthorizedResponse({
   description: 'The access token is missing, invalid, or expired.',
+  type: ApiErrorResponseDto,
+  example: apiErrorExample(401, 'Unauthorized', 'Unauthorized', '/tasks'),
 })
 @UseGuards(JwtAuthGuard)
 @Controller('tasks')
@@ -53,7 +57,18 @@ export class TasksController {
     description: 'The task was created successfully.',
     type: TaskResponseDto,
   })
-  @ApiBadRequestResponse({ description: 'The task data is invalid.' })
+  @ApiBadRequestResponse({
+    description: 'The task data is invalid.',
+    type: ApiErrorResponseDto,
+    example: apiErrorExample(
+      400,
+      'Bad Request',
+      [
+        'status must be one of the following values: pending, in_progress, completed',
+      ],
+      '/tasks',
+    ),
+  })
   create(
     @CurrentUser() currentUser: AuthenticatedUser,
     @Body() createTaskDto: CreateTaskDto,
@@ -78,9 +93,25 @@ export class TasksController {
   @ApiOperation({ summary: 'Get an owned task' })
   @ApiParam(taskIdParameter)
   @ApiOkResponse({ description: 'The requested task.', type: TaskResponseDto })
-  @ApiBadRequestResponse({ description: 'The task ID is malformed.' })
+  @ApiBadRequestResponse({
+    description: 'The task ID is malformed.',
+    type: ApiErrorResponseDto,
+    example: apiErrorExample(
+      400,
+      'Bad Request',
+      'Invalid task ID',
+      '/tasks/not-an-object-id',
+    ),
+  })
   @ApiNotFoundResponse({
     description: 'The task does not exist or belongs to another user.',
+    type: ApiErrorResponseDto,
+    example: apiErrorExample(
+      404,
+      'Not Found',
+      'Task not found',
+      '/tasks/66bf312225f21465bfc93d5c',
+    ),
   })
   findOne(
     @Param('id') taskId: string,
@@ -95,9 +126,23 @@ export class TasksController {
   @ApiOkResponse({ description: 'The updated task.', type: TaskResponseDto })
   @ApiBadRequestResponse({
     description: 'The task ID or update data is invalid.',
+    type: ApiErrorResponseDto,
+    example: apiErrorExample(
+      400,
+      'Bad Request',
+      'At least one task field must be provided',
+      '/tasks/66bf312225f21465bfc93d5c',
+    ),
   })
   @ApiNotFoundResponse({
     description: 'The task does not exist or belongs to another user.',
+    type: ApiErrorResponseDto,
+    example: apiErrorExample(
+      404,
+      'Not Found',
+      'Task not found',
+      '/tasks/66bf312225f21465bfc93d5c',
+    ),
   })
   update(
     @Param('id') taskId: string,
@@ -116,9 +161,25 @@ export class TasksController {
   @ApiOperation({ summary: 'Delete an owned task' })
   @ApiParam(taskIdParameter)
   @ApiNoContentResponse({ description: 'The task was deleted.' })
-  @ApiBadRequestResponse({ description: 'The task ID is malformed.' })
+  @ApiBadRequestResponse({
+    description: 'The task ID is malformed.',
+    type: ApiErrorResponseDto,
+    example: apiErrorExample(
+      400,
+      'Bad Request',
+      'Invalid task ID',
+      '/tasks/not-an-object-id',
+    ),
+  })
   @ApiNotFoundResponse({
     description: 'The task does not exist or belongs to another user.',
+    type: ApiErrorResponseDto,
+    example: apiErrorExample(
+      404,
+      'Not Found',
+      'Task not found',
+      '/tasks/66bf312225f21465bfc93d5c',
+    ),
   })
   delete(
     @Param('id') taskId: string,

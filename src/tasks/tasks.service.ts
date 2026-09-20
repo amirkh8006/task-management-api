@@ -67,6 +67,10 @@ export class TasksService {
   ): Promise<TaskResponseDto> {
     this.assertValidTaskId(taskId);
 
+    if (Object.keys(updateTaskDto).length === 0) {
+      throw new BadRequestException('At least one task field must be provided');
+    }
+
     const task = await this.taskModel
       .findOneAndUpdate(
         { _id: taskId, user: userId },

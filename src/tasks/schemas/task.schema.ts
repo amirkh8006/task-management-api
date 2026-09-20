@@ -46,6 +46,7 @@ export class Task {
 
 export const TaskSchema = SchemaFactory.createForClass(Task);
 
-TaskSchema.index({ user: 1, createdAt: -1 });
+TaskSchema.index({ user: 1, createdAt: -1, _id: -1 });
 TaskSchema.index({ user: 1, status: 1 });
 TaskSchema.index({ user: 1, priority: 1 });
+TaskSchema.index({ createdAt: -1, _id: -1 });

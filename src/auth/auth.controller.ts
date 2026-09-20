@@ -19,7 +19,9 @@ import {
 } from '@nestjs/swagger';
 
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { ApiErrorResponseDto } from '../common/dto/api-error-response.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { apiErrorExample } from '../common/swagger/api-error-example';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { AuthService } from './auth.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
@@ -40,23 +42,23 @@ export class AuthController {
   })
   @ApiBadRequestResponse({
     description: 'The registration data is invalid.',
-    schema: {
-      example: {
-        message: ['password must be longer than or equal to 8 bytes'],
-        error: 'Bad Request',
-        statusCode: 400,
-      },
-    },
+    type: ApiErrorResponseDto,
+    example: apiErrorExample(
+      400,
+      'Bad Request',
+      ['password must be longer than or equal to 8 bytes'],
+      '/auth/register',
+    ),
   })
   @ApiConflictResponse({
     description: 'An account with this email address already exists.',
-    schema: {
-      example: {
-        message: 'An account with this email address already exists',
-        error: 'Conflict',
-        statusCode: 409,
-      },
-    },
+    type: ApiErrorResponseDto,
+    example: apiErrorExample(
+      409,
+      'Conflict',
+      'An account with this email address already exists',
+      '/auth/register',
+    ),
   })
   register(@Body() registerDto: RegisterDto): Promise<AuthResponseDto> {
     return this.authService.register(registerDto);
@@ -71,23 +73,23 @@ export class AuthController {
   })
   @ApiBadRequestResponse({
     description: 'The login data is invalid.',
-    schema: {
-      example: {
-        message: ['email must be an email'],
-        error: 'Bad Request',
-        statusCode: 400,
-      },
-    },
+    type: ApiErrorResponseDto,
+    example: apiErrorExample(
+      400,
+      'Bad Request',
+      ['email must be an email'],
+      '/auth/login',
+    ),
   })
   @ApiUnauthorizedResponse({
     description: 'The email or password is invalid.',
-    schema: {
-      example: {
-        message: 'Invalid email or password',
-        error: 'Unauthorized',
-        statusCode: 401,
-      },
-    },
+    type: ApiErrorResponseDto,
+    example: apiErrorExample(
+      401,
+      'Unauthorized',
+      'Invalid email or password',
+      '/auth/login',
+    ),
   })
   login(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
     return this.authService.login(loginDto);
@@ -103,12 +105,8 @@ export class AuthController {
   })
   @ApiUnauthorizedResponse({
     description: 'The access token is missing, invalid, or expired.',
-    schema: {
-      example: {
-        message: 'Unauthorized',
-        statusCode: 401,
-      },
-    },
+    type: ApiErrorResponseDto,
+    example: apiErrorExample(401, 'Unauthorized', 'Unauthorized', '/auth/me'),
   })
   getCurrentUser(
     @CurrentUser() currentUser: AuthenticatedUser,
