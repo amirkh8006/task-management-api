@@ -1,0 +1,15 @@
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+node_modules
+dist
+coverage
+test/coverage
+tmp
+*.log
+*.tsbuildinfo
+.DS_Store
+.idea
+.vscode
