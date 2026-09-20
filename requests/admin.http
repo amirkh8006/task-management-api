@@ -1,0 +1,95 @@
+@baseUrl = http://localhost:5050
+@adminEmail = milestone4-admin@example.com
+@userEmail = milestone4-user@example.com
+@password = password123
+@userId = 6aaf8d8cd1b3f35e1ea1fb1b
+
+### Bootstrap instructions
+# 1. Register the admin candidate below.
+# 2. Run: npm run admin:promote -- milestone4-admin@example.com
+# 3. Log in as the promoted account and use its token for the admin requests.
+
+### Register the admin candidate
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Milestone 4 Admin",
+  "email": "{{adminEmail}}",
+  "password": "{{password}}"
+}
+
+### Register a normal user
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Milestone 4 User",
+  "email": "{{userEmail}}",
+  "password": "{{password}}"
+}
+
+### Log in as admin after promotion
+# @name loginAdmin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{password}}"
+}
+
+### Log in as a normal user
+# @name loginUser
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{userEmail}}",
+  "password": "{{password}}"
+}
+
+### Normal user creates a task
+# @name createUserTask
+POST {{baseUrl}}/tasks
+Authorization: Bearer {{loginUser.response.body.$.accessToken}}
+Content-Type: application/json
+
+{
+  "title": "Task removed with its owner",
+  "priority": "high"
+}
+
+### Admin lists every user
+GET {{baseUrl}}/users
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+
+### Admin retrieves the normal user
+GET {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+
+### Admin lists every task
+GET {{baseUrl}}/admin/tasks
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+
+### Normal user is forbidden from the admin user endpoint - expect 403
+GET {{baseUrl}}/users
+Authorization: Bearer {{loginUser.response.body.$.accessToken}}
+
+### Normal user is forbidden from the admin task endpoint - expect 403
+GET {{baseUrl}}/admin/tasks
+Authorization: Bearer {{loginUser.response.body.$.accessToken}}
+
+### Anonymous request is unauthenticated - expect 401
+GET {{baseUrl}}/users
+
+### Anonymous request is unauthenticated - expect 401
+GET {{baseUrl}}/admin/tasks
+
+### Admin deletes any task
+DELETE {{baseUrl}}/admin/tasks/{{createUserTask.response.body.$.id}}
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
+
+### Admin deletes a user and all tasks owned by that user
+DELETE {{baseUrl}}/users/{{userId}}
+Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}

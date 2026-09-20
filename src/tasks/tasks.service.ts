@@ -38,6 +38,15 @@ export class TasksService {
     return tasks.map((task) => this.toResponse(task));
   }
 
+  async findAllForAdmin(): Promise<TaskResponseDto[]> {
+    const tasks = await this.taskModel
+      .find()
+      .sort({ createdAt: -1, _id: -1 })
+      .exec();
+
+    return tasks.map((task) => this.toResponse(task));
+  }
+
   async findOneForUser(
     taskId: string,
     userId: string,
@@ -79,6 +88,20 @@ export class TasksService {
     if (!task) {
       throw new NotFoundException('Task not found');
     }
+  }
+
+  async deleteAsAdmin(taskId: string): Promise<void> {
+    this.assertValidTaskId(taskId);
+
+    const task = await this.taskModel.findByIdAndDelete(taskId).exec();
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+  }
+
+  async deleteAllForUser(userId: string): Promise<void> {
+    await this.taskModel.deleteMany({ user: userId }).exec();
   }
 
   private assertValidTaskId(taskId: string): void {

@@ -20,6 +20,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "admin:promote": "ts-node src/scripts/promote-admin.ts",
     "lint": "eslint --no-error-on-unmatched-pattern \"{src,test}/**/*.ts\"",
     "lint:fix": "eslint --no-error-on-unmatched-pattern \"{src,test}/**/*.ts\" --fix",
     "test": "jest --runInBand",

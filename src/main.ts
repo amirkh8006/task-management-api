@@ -19,7 +19,7 @@ async function bootstrap(): Promise<void> {
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Task Management API')
     .setDescription(
-      'REST API for authenticated users to securely manage their own tasks.',
+      'REST API for authenticated users to securely manage their own tasks, with role-protected administration endpoints.',
     )
     .setVersion('1.0')
     .addBearerAuth(
