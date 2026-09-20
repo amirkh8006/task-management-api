@@ -19,6 +19,7 @@ export class Task {
 
   @Prop({
     required: true,
+    type: String,
     enum: TaskStatus,
     default: TaskStatus.Pending,
   })
@@ -26,6 +27,7 @@ export class Task {
 
   @Prop({
     required: true,
+    type: String,
     enum: TaskPriority,
     default: TaskPriority.Medium,
   })
