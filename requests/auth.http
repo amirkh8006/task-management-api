@@ -1,0 +1,82 @@
+@baseUrl = http://localhost:5050
+@email = amir@gmail.com
+@password = password123
+
+### Register a user
+# @name register
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Log in
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Get the current user using the login token
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### Get the current user using the registration token
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{register.response.body.$.accessToken}}
+
+### Duplicate registration - expect 409 Conflict
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Duplicate User",
+  "email": "JOHN@example.com",
+  "password": "{{password}}"
+}
+
+### Invalid login - expect 401 Unauthorized
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "incorrect-password"
+}
+
+### Missing token - expect 401 Unauthorized
+GET {{baseUrl}}/auth/me
+
+### Invalid token - expect 401 Unauthorized
+GET {{baseUrl}}/auth/me
+Authorization: Bearer invalid-token
+
+### Weak password - expect 400 Bad Request
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Weak Password User",
+  "email": "weak-password@example.com",
+  "password": "short"
+}
+
+### Attempt to self-assign admin - expect 400 Bad Request
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Admin Attempt",
+  "email": "admin-attempt@example.com",
+  "password": "{{password}}",
+  "role": "admin"
+}
+
+### Swagger JSON
+GET {{baseUrl}}/docs-json
