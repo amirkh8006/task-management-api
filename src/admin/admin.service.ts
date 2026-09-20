@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
-import { TaskResponseDto } from '../tasks/dto/task-response.dto';
+import { PaginatedTasksResponseDto } from '../tasks/dto/paginated-tasks-response.dto';
+import { TaskQueryDto } from '../tasks/dto/task-query.dto';
 import { TasksService } from '../tasks/tasks.service';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { UsersService } from '../users/users.service';
@@ -26,8 +27,8 @@ export class AdminService {
     await this.usersService.delete(userId);
   }
 
-  findAllTasks(): Promise<TaskResponseDto[]> {
-    return this.tasksService.findAllForAdmin();
+  findAllTasks(query: TaskQueryDto): Promise<PaginatedTasksResponseDto> {
+    return this.tasksService.findAllForAdmin(query);
   }
 
   deleteTask(taskId: string): Promise<void> {

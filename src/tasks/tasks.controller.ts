@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -28,6 +29,8 @@ import { ApiErrorResponseDto } from '../common/dto/api-error-response.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { apiErrorExample } from '../common/swagger/api-error-example';
 import { CreateTaskDto } from './dto/create-task.dto';
+import { PaginatedTasksResponseDto } from './dto/paginated-tasks-response.dto';
+import { TaskQueryDto } from './dto/task-query.dto';
 import { TaskResponseDto } from './dto/task-response.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TasksService } from './tasks.service';
@@ -77,16 +80,30 @@ export class TasksController {
   }
 
   @Get()
-  @ApiOperation({ summary: "List the authenticated user's tasks" })
+  @ApiOperation({
+    summary: "List the authenticated user's tasks",
+    description:
+      'Returns newest tasks first. Search is case-insensitive and token-based across title and description.',
+  })
   @ApiOkResponse({
-    description: 'Tasks owned by the authenticated user.',
-    type: TaskResponseDto,
-    isArray: true,
+    description: 'A page of tasks owned by the authenticated user.',
+    type: PaginatedTasksResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'A pagination, filter, or search parameter is invalid.',
+    type: ApiErrorResponseDto,
+    example: apiErrorExample(
+      400,
+      'Bad Request',
+      ['page must not be less than 1'],
+      '/tasks?page=0',
+    ),
   })
   findAll(
     @CurrentUser() currentUser: AuthenticatedUser,
-  ): Promise<TaskResponseDto[]> {
-    return this.tasksService.findAllForUser(currentUser.id);
+    @Query() query: TaskQueryDto,
+  ): Promise<PaginatedTasksResponseDto> {
+    return this.tasksService.findAllForUser(currentUser.id, query);
   }
 
   @Get(':id')

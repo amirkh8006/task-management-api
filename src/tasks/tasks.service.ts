@@ -4,9 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { FilterQuery, Model, Types } from 'mongoose';
 
 import { CreateTaskDto } from './dto/create-task.dto';
+import { PaginatedTasksResponseDto } from './dto/paginated-tasks-response.dto';
+import { TaskQueryDto } from './dto/task-query.dto';
 import { TaskResponseDto } from './dto/task-response.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { Task, type TaskDocument } from './schemas/task.schema';
@@ -29,22 +31,15 @@ export class TasksService {
     return this.toResponse(task);
   }
 
-  async findAllForUser(userId: string): Promise<TaskResponseDto[]> {
-    const tasks = await this.taskModel
-      .find({ user: userId })
-      .sort({ createdAt: -1, _id: -1 })
-      .exec();
-
-    return tasks.map((task) => this.toResponse(task));
+  findAllForUser(
+    userId: string,
+    query: TaskQueryDto,
+  ): Promise<PaginatedTasksResponseDto> {
+    return this.findAll(query, userId);
   }
 
-  async findAllForAdmin(): Promise<TaskResponseDto[]> {
-    const tasks = await this.taskModel
-      .find()
-      .sort({ createdAt: -1, _id: -1 })
-      .exec();
-
-    return tasks.map((task) => this.toResponse(task));
+  findAllForAdmin(query: TaskQueryDto): Promise<PaginatedTasksResponseDto> {
+    return this.findAll(query);
   }
 
   async findOneForUser(
@@ -106,6 +101,45 @@ export class TasksService {
 
   async deleteAllForUser(userId: string): Promise<void> {
     await this.taskModel.deleteMany({ user: userId }).exec();
+  }
+
+  private async findAll(
+    query: TaskQueryDto,
+    userId?: string,
+  ): Promise<PaginatedTasksResponseDto> {
+    const filter: FilterQuery<Task> = {
+      ...(userId === undefined ? {} : { user: userId }),
+      ...(query.status === undefined ? {} : { status: query.status }),
+      ...(query.priority === undefined ? {} : { priority: query.priority }),
+      ...(query.search === undefined
+        ? {}
+        : {
+            $text: {
+              $search: query.search,
+              $caseSensitive: false,
+              $diacriticSensitive: false,
+            },
+          }),
+    };
+    const skip = (query.page - 1) * query.limit;
+
+    const [tasks, total] = await Promise.all([
+      this.taskModel
+        .find(filter)
+        .sort({ createdAt: -1, _id: -1 })
+        .skip(skip)
+        .limit(query.limit)
+        .exec(),
+      this.taskModel.countDocuments(filter).exec(),
+    ]);
+
+    return {
+      data: tasks.map((task) => this.toResponse(task)),
+      page: query.page,
+      limit: query.limit,
+      total,
+      totalPages: Math.ceil(total / query.limit),
+    };
   }
 
   private assertValidTaskId(taskId: string): void {

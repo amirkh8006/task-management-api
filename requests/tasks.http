@@ -73,6 +73,18 @@ Content-Type: application/json
 GET {{baseUrl}}/tasks
 Authorization: Bearer {{loginOwnerA.response.body.$.accessToken}}
 
+### Paginate owner A's tasks
+GET {{baseUrl}}/tasks?page=1&limit=10
+Authorization: Bearer {{loginOwnerA.response.body.$.accessToken}}
+
+### Filter and search owner A's tasks (case-insensitive token search)
+GET {{baseUrl}}/tasks?status=pending&priority=high&search=nestjs
+Authorization: Bearer {{loginOwnerA.response.body.$.accessToken}}
+
+### Reject an invalid page size - expect 400 Bad Request
+GET {{baseUrl}}/tasks?limit=101
+Authorization: Bearer {{loginOwnerA.response.body.$.accessToken}}
+
 ### List owner B's tasks - must not include owner A's task
 GET {{baseUrl}}/tasks
 Authorization: Bearer {{loginOwnerB.response.body.$.accessToken}}

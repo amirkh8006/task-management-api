@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -26,7 +27,8 @@ import { UserRole } from '../common/enums/user-role.enum';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { apiErrorExample } from '../common/swagger/api-error-example';
-import { TaskResponseDto } from '../tasks/dto/task-response.dto';
+import { PaginatedTasksResponseDto } from '../tasks/dto/paginated-tasks-response.dto';
+import { TaskQueryDto } from '../tasks/dto/task-query.dto';
 import { AdminService } from './admin.service';
 
 const taskIdParameter = {
@@ -59,14 +61,27 @@ export class AdminTasksController {
   constructor(private readonly adminService: AdminService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List all tasks across all users (admin only)' })
-  @ApiOkResponse({
-    description: 'All tasks across all owners.',
-    type: TaskResponseDto,
-    isArray: true,
+  @ApiOperation({
+    summary: 'List all tasks across all users (admin only)',
+    description:
+      'Returns newest tasks first. Search is case-insensitive and token-based across title and description.',
   })
-  findAll(): Promise<TaskResponseDto[]> {
-    return this.adminService.findAllTasks();
+  @ApiOkResponse({
+    description: 'A page of tasks across all owners.',
+    type: PaginatedTasksResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'A pagination, filter, or search parameter is invalid.',
+    type: ApiErrorResponseDto,
+    example: apiErrorExample(
+      400,
+      'Bad Request',
+      ['limit must not be greater than 100'],
+      '/admin/tasks?limit=101',
+    ),
+  })
+  findAll(@Query() query: TaskQueryDto): Promise<PaginatedTasksResponseDto> {
+    return this.adminService.findAllTasks(query);
   }
 
   @Delete(':id')

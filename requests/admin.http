@@ -68,8 +68,8 @@ Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
 GET {{baseUrl}}/users/{{userId}}
 Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
 
-### Admin lists every task
-GET {{baseUrl}}/admin/tasks
+### Admin lists a filtered page of tasks across all owners
+GET {{baseUrl}}/admin/tasks?page=1&limit=10&priority=high&search=task
 Authorization: Bearer {{loginAdmin.response.body.$.accessToken}}
 
 ### Normal user is forbidden from the admin user endpoint - expect 403
